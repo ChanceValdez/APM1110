@@ -1,0 +1,52 @@
+---
+title: "SEC 2-FA2 GROUP 24-VALDEZ, CJ"
+subtitle: "https://github.com/ChanceValdez/APM1110/tree/main/FA2"
+author: "Chance Jayden Valdez"
+date: "August 30, 2026"
+output: pdf_document
+---
+
+## Item 4
+Amy and Jane are gambling together. A fair coin is tossed repeatedly. Each time a head comes up, Amy wins two euro from Jane, and each time a tail comes up, Amy loses two euro to Jane. Use R to simulate this game 100 times:
+
+**R Code to Simulate Tossing Game**
+```{r}
+num_tosses <- 100
+H <- 2
+T <- -2
+
+tosses <- sample(c(H, T), size = num_tosses, replace = TRUE)
+winnings <- cumsum(tosses)
+plot(1:num_tosses, winnings, type = "o", 
+     xlab = "Number of Tosses", ylab = "Winnings")
+abline(h = 0)
+```
+Now, estimate:
+
+(a) the number of times that Amy is ahead in these 100 tosses;
+
+(b) how much Amy has won or lost after 100 tosses.
+
+**R Code to Answer (a) and (b)**
+
+```{r}
+times_ahead <- sum(winnings > 0)
+cat("The number of times Amy was ahead in these", num_tosses, "tosses:\n")
+cat("Amy was ahead:", times_ahead, "times.\n")
+
+final_winnings <- winnings[num_tosses]
+cat("How much Amy has won or lost after", num_tosses, "tosses:\n")
+cat("Amy's final net winnings/losses:", final_winnings, "euros.\n")
+```
+
+**Additional Calculations (for fun!)**
+
+```{r}
+times_tied <- sum(winnings == 0)
+times_behind <- sum(winnings < 0)
+
+cat("Amy was tied (at 0 euros):", times_tied, "times.\n")
+cat("Amy was behind:", times_behind, "times.\n")
+```
+
+**Github:** https://github.com/ChanceValdez/APM1110/tree/main/FA2
