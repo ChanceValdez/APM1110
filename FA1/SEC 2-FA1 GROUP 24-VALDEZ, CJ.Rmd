@@ -33,8 +33,9 @@ accurate_skew <- function(x) {
   } 
 
 approximate_skew <- function(x) {
-  3*(mean(x, na.rm = TRUE) - median(x, na.rm = TRUE)) / (sd(x, na.rm = TRUE))
-}
+  x <- x[!is.na(x)]
+  3*(mean(x) - median(x)) / (sd(x))
+  }
 
 accurate_skew_results <- sapply(results[, 2:5], accurate_skew)
 
