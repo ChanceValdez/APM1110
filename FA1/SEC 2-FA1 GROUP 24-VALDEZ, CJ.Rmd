@@ -1,0 +1,98 @@
+---
+title: "SEC 2-FA1 GROUP 24-VALDEZ, CJ"
+subtitle: "https://github.com/ChanceValdez/APM1110/tree/main/FA1"
+author: "Chance Jayden Valdez"
+date: "August 29, 2026"
+output: pdf_document
+---
+
+## Item 1
+
+Write the skewness program, and use it to calculate the skewness coefficient of the four examination subjects in results.txt (results.csv). What can you say about these data?
+
+**Skewness Formula (Equation 2.1)** 
+$$\text{skew} = \frac{\sqrt{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{\left(\sum_{i=1}^{n} (x_i - \bar{x})^2\right)^{3/2}}$$
+Pearson has given an approximate formula for the skewness that is easier to calculate than the exact formula given in Equation 2.1.
+
+**Pearson's Approximate Formula**
+$$\text{skew}=\frac{3(\text{mean}-\text{median})}{\text{standard deviation}}$$
+Write a program to calculate this and apply it to the data in results.txt (results.csv). Is it a reasonable approximation? 
+
+**Item 1 Program**
+```{r}
+
+results <- read.csv("results.csv", header = TRUE)
+
+accurate_skew <- function(x) {
+  x <- x[!is.na(x)]
+  n <- length(x)
+  xbar <- mean(x)
+  sum2 <- sum((x - xbar) ^ 2)
+  sum3 <- sum((x - xbar) ^ 3)
+  return ((sqrt(n) * sum3) / (sum2 ^ 1.5))
+  } 
+
+approximate_skew <- function(x) {
+  x <- x[!is.na(x)]
+  3*(mean(x) - median(x)) / (sd(x))
+  }
+
+accurate_skew_results <- sapply(results[, 2:5], accurate_skew)
+
+approximate_skew_results <- sapply(results[, 2:5], approximate_skew)
+
+skew_results <- rbind(accurate_skew_results, approximate_skew_results)
+
+rownames(skew_results) <- c("Skewness", "Pearson's Approximation")
+
+skew_results
+```
+**Questions for Item 1**
+
+What can you say about the data?
+
+> The subjects `arch1` (-0.507), `prog1` (-0.344), and `prog2` (-0.281) are negatively skewed, indicating that their distributions have a longer tail towards the left, while `arch2` (0.462) is positively skewed, which shows a longer tail on the right. All skewness values fall very close to -0.5 > x > 0.5 interval, showing that the distribution across the four subjects are moderately to fairly symmetrical.
+
+Is it a reasonable approximation?
+
+> It is reasonable for the two architecture subjects (`arch1` and `arch2` as the approximation matches the true skewness direction, differing by only ~0.06 to 0.08. While the approximation in the two programming subjects (`prog1` and `prog2`) overestimates the skewness. The Pearson approximation is moderately reasonable for a quick heuristic check of trend, but it should be used with caution since it can sometimes exaggerate the assymetry, as seen in the `prog` datasets.
+
+## Item 2
+
+For the class of 50 students of computing detailed in Exercise 1.1, use R to:
+
+(a) Form the stem-and-leaf display for each gender, and discuss the advantages of this representation compared to the traditional histogram;
+
+```{r}
+Females <- c(57, 59, 78, 79, 60, 65, 68, 71,
+             75, 48, 51, 55, 56, 41, 43, 44,
+             75, 78, 80, 81, 83, 83, 85)
+Males <- c(48, 49, 49, 30, 30, 31, 32, 35, 37,
+           41, 86, 42, 51, 53, 56, 42, 44, 50,
+           51, 65, 67, 51, 56, 58, 64, 64, 75)
+
+cat("First-Year Java Programming Exam Scores (Females)\n")
+stem(Females)
+cat("First-Year Java Programming Exam Scores (Males)\n")
+stem(Males)
+```
+
+> A histogram only shows individual scores inside frequency bars (e.g., you can only see that 4 scores fall between 40-49), contrast that with the stem-and-leaf display which preserves the exact single student's score. Turning it sideways creates a curve identical to a histogram. In this display, you can also locate the exact minimum and maximum scores, as well as calculate the medians or percentiles without relying on a raw spreadsheet.
+
+(b) Construct a box-plot for each gender and discuss the findings.
+
+```{r}
+
+boxplot(Females, Males,
+        main = "First-Year Java Programming Exam Scores",
+        xlab = "Students",
+        ylab = "Exam Scores",
+        ylim = range(30:100, na.rm = TRUE),
+        names = c("Females", "Males"),
+        col = c("pink", "cyan")
+        )
+```
+
+> Females performed significantly better than their male peers, achieving a median score of 68 compared to the male median score is 50. However, female scores exhibited more variation than those of their male counterparts. Lastly, the males had an outlier of a student scoring 86, while the females have no outliers.
+
+**Github:** https://github.com/ChanceValdez/APM1110/tree/main/FA1
