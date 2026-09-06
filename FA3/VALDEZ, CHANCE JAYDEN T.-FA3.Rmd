@@ -1,0 +1,116 @@
+---
+title: "VALDEZ, CHANCE JAYDEN T.-FA3"
+subtitle: "https://github.com/ChanceValdez/APM1110/tree/main/FA3"
+author: "Chance Jayden Valdez"
+date: "September 6, 2026"
+output: pdf_document
+---
+
+# Exercise 6.1
+## Item 5
+A geospatial analysis system has four sensors supplying images. The percentage of images supplied by each sensor and the percentage of images relevant to a query are shown in the following table.
+\begin{center}
+\begin{tabular}{ccc}
+\hline
+Sensor & Percentage of Images Supplied & Percentage of Relevant Images \\ \hline
+1      & 15                            & 50                            \\
+2      & 20                            & 60                            \\
+3      & 25                            & 80                            \\
+4      & 40                            & 85                            \\ \hline
+\end{tabular}
+\end{center}
+
+What is the overall percentage of relevant images? 
+
+**Step by Step Computation**
+
+According to Theorem 6.1, the Law of Total Probability, if a sample space $S$ can be partitioned into $k$ mutually exclusive and exhaustive events, $A_1, A_2, A_3, \dots, A_k$, then for any event $E$:
+$$P(E) = P(A_1)P(E \mid A_1) + P(A_2)P(E \mid A_2) + \dots + P(A_k)P(E \mid A_k)$$
+
+Let:
+
+* $k = 4$, representing the total number of image sensors.
+* $S_i$ be the event that an image is supplied by Sensor $i$, where $i \in \{1, 2, 3, 4\}$.
+* $R$ be the event that a selected image is relevant to the query.
+* $P(R \mid S_i)$ be the conditional probability that an image is relevant, given it is from Sensor $i$.
+
+The total probability formula for our specific events is:
+$$P(R)=P(S_{1})P(R\mid S_{1})+P(S_{2})P(R\mid S_{2})+P(S_{3})P(R\mid S_{3})+P(S_{4})P(R\mid S_{4})$$
+
+Substituting our values into the formula:  
+\begin{align*}
+P(R) &= P(S_1)P(R \mid S_1) + P(S_2)P(R \mid S_2) + P(S_3)P(R \mid S_3) + P(S_4)P(R \mid S_4) \\
+     &= (0.15 \times 0.50) + (0.20 \times 0.60) + (0.25 \times 0.80) + (0.40 \times 0.85) \\
+     &= 0.075 + 0.120 + 0.200 + 0.340 \\
+     &= 0.735
+\end{align*}
+
+Thus, the overall percentage of relevant images is 73.5%.
+
+**R Code for Verification**
+
+```{r}
+sensor_data <- data.frame(
+  Sensor = 1:4,
+  Supplied = c(0.15, 0.20, 0.25, 0.40),
+  Relevant = c(0.50, 0.60, 0.80, 0.85)
+  )
+sensor_data 
+
+rel_img <- sum(sensor_data$Supplied * sensor_data$Relevant)
+
+cat("Overall Percentage of Relevant Images:", rel_img * 100, "%.", sep = " ")
+```
+
+## Item 6
+A fair coin is tossed twice. \
+Let $E_1$ be the event that both tosses have the same outcome, that is, $E_1 = \{HH, TT\}$. \
+Let $E_2$ be the event that the first toss is a head, that is, $E_2 = \{HH, HT\}$. \
+Let $E_3$ be the event that the second toss is a head, that is, $E_3 = \{TH, HH\}$. \
+Show that $E_1$, $E_2$, and $E_3$ are pairwise independent but not mutually independent.
+
+**Step by Step Computation**
+
+Let the sample space $S$ be the set of all possible outcomes when a fair coin is tossed twice:
+$$S = \{HH, HT, TH, TT\}$$
+
+As the coin is fair, each of the 4 outcomes is equally likely, meaning the probability of any individual outcome is $\frac{1}{4}$. 
+$$P(HH) = P(HT) = P(TH) = P(TT) = \frac{1}{4}$$
+
+Using the addition rule for mutually exclusive events, where $P(E \cap F) = 0$, we sum the probabilities of the individual outcomes:
+
+* $P(E_1) = P(HH \cup TT) = P(HH) + P(TT) = \frac{1}{4} + \frac{1}{4} = \frac{1}{2}$
+* $P(E_2) = P(HH \cup HT) = P(HH) + P(HT) = \frac{1}{4} + \frac{1}{4} = \frac{1}{2}$
+* $P(E_3) = P(TH \cup HH) = P(TH) + P(HH) = \frac{1}{4} + \frac{1}{4} = \frac{1}{2}$
+
+### Pairwise Independence Test
+
+To show that the events are pairwise independent, we use the independence formula for each pair of events:
+$$P(A \cap B) = P(A) \cdot P(B)$$
+
+* $E_1$ and $E_2$: \newline
+  $E_1 \cap E_2 = \{HH\} \implies P(E_1 \cap E_2) = \frac{1}{4}$ \newline
+  $P(E_1) \cdot P(E_2) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$ \newline
+  Since $\frac{1}{4} = \frac{1}{4}$, they are independent.
+* $E_1$ and $E_3$: \newline
+  $E_1 \cap E_3 = \{HH\} \implies P(E_1 \cap E_3) = \frac{1}{4}$ \newline
+  $P(E_1) \cdot P(E_3) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$ \newline
+  Since $\frac{1}{4} = \frac{1}{4}$, they are independent.
+* $E_2$ and $E_3$: \newline
+  $E_2 \cap E_3 = \{HH\} \implies P(E_2 \cap E_3) = \frac{1}{4}$ \newline
+  $P(E_2) \cdot P(E_3) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}$ \newline
+  Since $\frac{1}{4} = \frac{1}{4}$, they are independent.
+
+As the formula holds true for all pairs, $E_1$, $E_2$, and $E_3$ are **pairwise independent**.
+
+### Mutual Independence Test
+
+To show that the events are mutually independent, they must also satisfy the joint formula for all three events together:
+$$P(E_1 \cap E_2 \cap E_3) = P(E_1) \cdot P(E_2) \cdot P(E_3)$$
+
+* $E_1 \cap E_2 \cap E_3 = \{HH\} \implies P(E_1 \cap E_2 \cap E_3) = \frac{1}{4}$
+* $P(E_1) \cdot P(E_2) \cdot P(E_3) = \frac{1}{2} \cdot \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{8}$
+
+As $\frac{1}{4} \neq \frac{1}{8}$, the formula does not hold. Thus, the events are **not mutually independent**.
+
+**Github:** https://github.com/ChanceValdez/APM1110/tree/main/FA3
