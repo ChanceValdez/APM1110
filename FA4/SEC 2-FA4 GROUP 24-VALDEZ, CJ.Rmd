@@ -1,0 +1,155 @@
+---
+title: "SEC 2-FA4 GROUP 24-VALDEZ, CJ"
+subtitle: "https://github.com/ChanceValdez/APM1110/tree/main/FA4"
+author: "Chance Jayden Valdez"
+date: "September 5, 2026"
+output: pdf_document
+---
+
+
+# Exercise 7.1
+## Item 2
+A binary communication channel carries data as one of two sets of signals denoted by 0 and 1. Owing to noise, a transmitted 0 is sometimes received as a 1, and a transmitted 1 is sometimes received as a 0. For a given channel, it can be assumed that a transmitted 0 is correctly received with probability 0.95, and a transmitted 1 is correctly received with probability 0.75. Also, 70% of all messages are transmitted as a 0. 
+
+Let: 
+\begin{itemize}
+  \item $T_0$: Signal 0 is transmitted.
+  \item $T_1$: Signal 1 is transmitted.
+  \item $R_0$: Signal 0 is received
+  \item $R_1$: Signal 1 is received.
+\end{itemize}
+
+We are given:
+\begin{itemize}
+  \item $P(T_0) = 0.70 \implies P(T_1) = 1 - 0.70 = 0.30$
+  \item $P(R_0 | T_0) = 0.95 \implies P(R_1 | T_0) = 1 - 0.95 = 0.05$ 
+  \item $P(R_1 | T_1) = 0.75 \implies P(R_0 | T_1) = 1 - 0.75 = 0.25$
+\end{itemize}
+
+If a signal is sent, determine the probability that: 
+
+**(a) a 1 was received;**
+
+For this problem, we use the Law of Total Probability: 
+\begin{align*}
+P(R_1) &= P(R_1 | T_0)P(T_0) + P(R_1 | T_1) \cdot P(T_1) \\
+P(R_1) &= (0.05 \cdot 0.70) + (0.75 \cdot 0.30) \\
+P(R_1) &= 0.035 + 0.225 = 0.26
+\end{align*}
+
+The probability that a 1 was received is $\boxed{0.26 \text{ or } 26\%}$.
+
+**(b) a 1 was transmitted given that a 1 was received.**
+
+For this problem, we use Bayes' Theorem: 
+\begin{align*}
+P(T_1 | R_1) &= \frac{P(R_1 | T_1)P(T_1)}{P(R_1)} \\
+P(T_1 | R_1) &= \frac{0.225}{0.26} \approx 0.8654
+\end{align*}
+
+The probability that a 1 was transmitted given that a 1 was received is approximately $\boxed{0.8654 \text{ or } 86.54\%}$.
+
+**R Code for Verification**
+```{r}
+P_T0 <- 0.70
+P_T1 <- 1 - P_T0 # 0.30
+P_R0_given_T0 <- 0.95
+P_R1_given_T0 <- 1 - P_R0_given_T0 # 0.05
+P_R1_given_T1 <- 0.75
+P_R0_given_T1 <- 1 - P_R1_given_T1 # 0.25
+
+priors <- c(P_T0, P_T1)
+conditionals <- c(P_R1_given_T0, P_R1_given_T1)
+
+P_R1_result <- sum(conditionals * priors)
+
+calc_bayes_posterior <- function(prior, conditional, total_likelihood) {
+  posterior <- (conditional * prior) / total_likelihood
+  return(posterior)
+  }
+
+P_T1_given_R1_result <- calc_bayes_posterior(
+  prior = P_T1, 
+  conditional = P_R1_given_T1, 
+  total_likelihood = P_R1_result
+  )
+
+cat("The probability that a 1 was received is ", P_R1_result,
+    " (or ", P_R1_result * 100, "%)\n", sep = "")
+
+cat("The probability that a 1 was transmitted given that a 1 was received is approximately: \n",
+    round(P_T1_given_R1_result, 4), " (or ", round(P_T1_given_R1_result * 100, 2), "%)\n", sep = "")
+```
+
+## Item 7
+There are three employees working at an IT company: Jane, Amy, and Ava, doing 10%, 30%, and 60% of the programming, respectively. 8% of Jane’s work, 5% of Amy’s work, and just 1% of Ava‘s work is in error. 
+
+**Step by Step Computation**
+
+Let: 
+\begin{itemize}
+  \item $J$: Jane's programming.
+  \item $Am$: Amy's programming.
+  \item $Av$: Ava's programming.
+  \item $E$: The program contains an error.
+\end{itemize}
+
+We are given:
+\begin{itemize}
+  \item $P(J) = 0.10 \implies P(E | J) = 0.08$
+  \item $P(Am) = 0.30 \implies P(E | Am) = 0.05$
+  \item $P(Av) = 0.60 \implies P(E | Av) = 0.01$
+\end{itemize}
+
+**(a) What is the overall percentage of error?**
+
+To find the total probability of an error occurring, $P(E)$, we use the Law of Total Probability:
+\begin{align*}
+P(E) &= P(E | J)P(J) + P(E | Am)P(Am) + P(E | Av)P(Av) \\
+P(E) &= (0.08 \cdot 0.10) + (0.05 \cdot 0.30) + (0.01 \cdot 0.60) \\
+P(E) &= 0.008 + 0.015 + 0.006 \\
+P(E) &= 0.029
+\end{align*}
+
+The overall percentage of error in the company is $\boxed{0.029 \text{ or } 2.9\%}$.
+
+**(b) If a program is found with an error, who is the most likely person to have written it?**
+
+To determine who is most likely responsible for a given error, we use Bayes' Theorem to calculate the posterior probability for each employee:
+
+\begin{align*}
+P(J | E) &= \frac{P(E | J)P(J)}{P(E)} = \frac{0.008}{0.029} \approx 0.2759 \text{ (or 27.59\%)} \\
+P(Am | E) &= \frac{P(E | Am)P(Am)}{P(E)} = \frac{0.015}{0.029} \approx 0.5172 \text{ (or 51.72\%)} \\
+P(Av | E) &= \frac{P(E | Av)P(Av)}{P(E)} = \frac{0.006}{0.029} \approx 0.2069 \text{ (or 20.69\%)}
+\end{align*}
+
+When comparing the posterior probabilities ($0.5172 > 0.2759 > 0.2069$), $\boxed{\text{Amy}}$ is the most likely person to have written the program containing the error.
+
+**R Code for Verification**
+```{r}
+work_share <- c(Jane = 0.10, Amy = 0.30, Ava = 0.60)
+error_rates <- c(Jane = 0.08, Amy = 0.05, Ava = 0.01)
+error_contributions <- work_share * error_rates
+
+total_error <- sum(error_contributions)
+cat("The overall percentage of error:", total_error * 100, "%\n")
+
+calc_bayes_posterior <- function(prior, conditional, total_likelihood) {
+  posterior <- (conditional * prior) / total_likelihood
+  return(posterior)
+  }
+
+posterior_probs <- calc_bayes_posterior(
+  prior = work_share, 
+  conditional = error_rates, 
+  total_likelihood = total_error
+  )
+
+cat("Probability that a Person is Responsible for a Given Error:\n")
+print(round(posterior_probs * 100, 2))
+
+most_likely <- names(which.max(posterior_probs))
+cat("Most Likely Person to have Written the Error:", most_likely, "\n")
+```
+
+**Github:** https://github.com/ChanceValdez/APM1110/tree/main/FA4
