@@ -1,0 +1,318 @@
+---
+title: "FA9: Joint and Marginal Distributions, Conditional Distributions and Stochastic Independence"
+author: "Chance Jayden T. Valdez"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Introduction
+This report analyzes how two random variables can be related, which focuses on stochastic independence, sums of independent random variables, and  conditional distributions.  
+
+# Dataset Description or Simulation Design
+
+The real data come from the `diamonds` dataset in the R package `ggplot2` (Wickham, 2016; Wickham et al., 2026), while the simulated data for Part 2 are generated using `rpois()`, with $X \sim \text{Poisson}(3)$ and $Y \sim \text{Poisson}(5)$, $n = 10{,}000$ observations each, and a seed of 41. The `diamonds` dataset has 53,940 observations and 10 variables. Part 1 uses `cut` and `color`, Part 3 uses `cut` and `clarity`, and Part 4 uses `price` and `carat`.
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggplot2)
+set.seed(41)
+```
+
+\pagebreak 
+
+# Stochastic Independence (8 points)
+
+Select two random variables, $X$ and $Y$, from your chosen dataset or simulated data.
+
+## (a) Description of the Two Random Variables (2 points)
+
+> *Describe the two random variables and explain how they are measured or generated.*
+
+Let $X$ be the quality of the diamond's cut (`cut`) and $Y$ be the diamond's color (`color`). They are discrete (ordinal) random variables, and each is recorded as a quality grade. The levels of $X$ from worst to best are Fair, Good, Very Good, Premium, and Ideal, while those of $Y$ are J, I, H, G, F, E, and D (listed in reverse alphabetical order so that both run from worst to best). Cut grades the quality of how a diamond was cut, while color grades how colorless it is, with D being colorless. Both are observed grades from the `diamonds` dataset rather than simulated values.
+
+```{r}
+X_p1 <- diamonds$cut
+Y_p1 <- diamonds$color
+
+knitr::kable(as.data.frame(table(Cut = X_p1)), caption = "Frequency of each Cut Grade")
+knitr::kable(as.data.frame(table(Color = Y_p1)), caption = "Frequency of each Color Grade")
+```
+
+
+## (b) Relationship Between the Two Variables (2 points)
+
+> *Examine the relationship between the two variables using an appropriate numerical or graphical approach.*
+
+Let's use both a numerical and graphical approach. Starting with the numerical approach to test and measure the association, we use a chi-square test of independence and Cramér's V. The chi-square test determines whether a statistically significant relationship exists between the two categorical variables (typically requiring a $p$-value < 0.05), while Cramér's V measures the strength of that association, ranging from 0 (none) to 1 (perfect).
+
+```{r}
+counts_p1 <- table(Cut = X_p1, Color = Y_p1)
+
+chi_p1 <- chisq.test(counts_p1)
+V_p1 <- sqrt(chi_p1$statistic / (sum(counts_p1) * (min(dim(counts_p1)) - 1)))
+```
+
+The chi-square test ($p$-value `r format.pval(chi_p1$p.value, eps = 2.2e-16)`, below 0.05) indicates strong statistical evidence of an association, while Cramér's V of about `r round(unname(V_p1), 4)` shows that the practical strength of this association is very weak.
+
+For the graphical approach, we use a 100% stacked bar chart, where each bar represents a color and its segments show the share of each cut.
+
+```{r fig.width=6, fig.height=3.5, fig.align='center'}
+ggplot(data = diamonds, mapping = aes(x = color, fill = cut)) +
+  geom_bar(position = "fill") + labs(x = "Color", y = "Proportion", fill = "Cut")
+```
+
+The chart shows similar proportions of cuts across all colors, with only small differences. This agrees with the very weak association found above.
+
+## (c) Evaluation of Independence (2 points)
+
+> *Evaluate whether the two variables can reasonably be considered independent. For discrete variables, examine the joint probability mass function and marginal probability mass functions. For continuous variables, examine the joint distribution and the corresponding marginal distributions.*
+
+```{r}
+joint_pmf <- prop.table(counts_p1)
+
+marginal_cut <- margin.table(joint_pmf, 1)
+
+marginal_color <- margin.table(joint_pmf, 2)
+
+indep_pmf <- outer(marginal_cut, marginal_color)
+
+diff_pmf <- joint_pmf - indep_pmf
+
+knitr::kable(round(addmargins(joint_pmf), 4), caption = "Observed Joint and Marginal 
+             PMFs of Cut and Color")
+knitr::kable(round(indep_pmf, 4), caption = "Expected Joint PMF Under Independence")
+knitr::kable(round(diff_pmf, 4), caption = "Difference (Observed - Expected)")
+```
+
+Strictly speaking, $P(X = x, Y = y) \neq P(X = x)P(Y = y)$ across the cells, and the chi-square test ($p$-value < 2.2e-16) rejects exact independence, meaning `cut` and `color` are not mathematically independent. However, practically speaking, the differences between the observed and expected joint probabilities are extremely tiny—every cell differs by less than $0.01$. Aligning with the very weak Cramér's V of `r round(unname(V_p1), 4)`, the two variables can reasonably be considered nearly independent in practice.
+
+## (d) Factorization Criterion for Independence (2 points)
+
+> *Discuss your findings in relation to the factorization criterion for independence:*
+
+> $$f_{X,Y}(x,y) = f_X(x)f_Y(y)$$
+
+> *For discrete variables, use the corresponding probability mass function.*
+
+The factorization criterion for discrete random variables states that $X$ and $Y$ are stochastically independent if and only if their joint probability mass function equals the product of their marginal probability mass functions for every pair $(x, y)$:
+
+$$p_{X,Y}(x,y) = p_X(x)p_Y(y)$$
+
+Comparing the observed joint PMF table to the expected independent PMF table from part (c) shows that exact factorization does not hold. For example, for an Ideal cut and G color diamond, the observed joint probability is `r round(joint_pmf["Ideal", "G"], 4)`, whereas the product of the marginal probabilities is `r round(marginal_cut["Ideal"], 4)` $\times$ `r round(marginal_color["G"], 4)` $=$ `r round(indep_pmf["Ideal", "G"], 4)`. Because $p_{X,Y}(x,y) \neq p_X(x)p_Y(y)$ across the cells, the variables fail the strict mathematical criterion for independence. However, because $p_{X,Y}(x,y) \approx p_X(x)p_Y(y)$ within $0.01$ across all cells, the factorization criterion holds approximately in practice.
+
+\pagebreak 
+
+# Sums of Independent Random Variables (7 points)
+
+Consider two independent random variables $X$ and $Y$.
+
+## (a) Probability Distributions of $X$ and $Y$ (2 points)
+
+> *Specify the probability distributions of $X$ and $Y$, including their parameters.*
+
+The probability distribution I have chosen is the Poisson distribution, which models the number of events occurring in a fixed interval at a constant average rate, with events occurring independently. The parameters are given by $X \sim \text{Poisson}(\lambda_X = 3)$ and $Y \sim \text{Poisson}(\lambda_Y = 5)$, generated independently with $n = 10{,}000$ each. The expected value (mean) is $E[X] = 3$ and $E[Y] = 5$. The variance is $\text{Var}(X) = 3$ and $\text{Var}(Y) = 5$. 
+
+## (b) Generating Independent Observations (1 point)
+
+> *Generate at least 5,000 observations from each distribution using R, ensuring that the variables are generated independently.*
+
+We generate 10,000 observations from each distribution using separate calls to `rpois()`, which in turn makes $X$ and $Y$ independent in the simulation.
+
+```{r}
+n <- 10000
+X_p2 <- rpois(n, 3)
+Y_p2 <- rpois(n, 5)
+```
+
+## (c) Distribution of $S = X + Y$ (2 points)
+
+> *Construct the random variable $S = X + Y$. Examine the distribution of $S$ using an appropriate histogram or probability distribution plot.*
+
+We add each pair to form $S$. Since $X$ and $Y$ are independent Poisson variables, $S$ should follow a Poisson(8) distribution, shown by the red points.
+
+```{r fig.width=6, fig.height=3.5, fig.align='center'}
+S_p2 <- X_p2 + Y_p2
+
+ggplot() +
+  geom_histogram(aes(S_p2, after_stat(density)), binwidth = 1, fill = "#313338") +
+  geom_point(aes(0:max(S_p2), dpois(0:max(S_p2), 8)), color = "#ED4245") + 
+  labs(title = "Distribution of S = X + Y", x = "S", y = "Probability")
+```
+
+The simulated histogram closely aligns with the red theoretical points, indicating that $S = X + Y$ follows a theoretical Poisson(8) distribution.
+
+## (d) Expected Values and Variances (2 points)
+
+> *Calculate and compare the theoretical and simulated expected values and variances of $S$. Explain whether the results support the properties of sums of independent random variables.*
+
+```{r}
+lambda_X <- 3
+lambda_Y <- 5
+lambda_S <- lambda_X + lambda_Y
+
+summary_table <- data.frame(
+  Variable = c("X", "Y", "S = X + Y"),
+  Theoretical_Mean = c(lambda_X, lambda_Y, lambda_S),
+  Simulated_Mean = round(c(mean(X_p2), mean(Y_p2), mean(S_p2)), 4),
+  Theoretical_Variance = c(lambda_X, lambda_Y, lambda_S),
+  Simulated_Variance = round(c(var(X_p2), var(Y_p2), var(S_p2)), 4)
+)
+
+knitr::kable(
+  summary_table, align = "c", 
+  col.names = c("Variable", "Theoretical Mean", "Simulated Mean", 
+                "Theoretical Variance", "Simulated Variance"), 
+  caption = "Theoretical vs. Simulated Mean and Variance"
+)
+```
+
+The results support the properties of sums of independent random variables, namely $E[X + Y] = E[X] + E[Y]$ and $\text{Var}(X + Y) = \text{Var}(X) + \text{Var}(Y)$. Both the simulated mean ($`r round(mean(S_p2), 4)` \approx 8$) and simulated variance ($`r round(var(S_p2), 4)` \approx 8$) closely match the theoretical sum of $3 + 5 = 8$. While expected values always add regardless of dependence, the variances adding together here specifically reflects the independence of $X$ and $Y$.
+
+\pagebreak 
+
+# Conditional Distributions – Discrete Case (7 points)
+
+Using a real dataset with two discrete random variables or simulated discrete data:
+
+## (a) Joint Probability Distribution (2 points)
+
+> *Construct the joint probability distribution of $X$ and $Y$.*
+
+In this part, we reuse cut from Part 1. Let $X$ be the quality of the diamond's cut (`cut`) and $Y$ be the diamond's clarity (`clarity`). They are discrete (ordinal) random variables, and each is recorded as a quality grade. The levels of $X$ from worst to best are Fair, Good, Very Good, Premium, and Ideal, while those of $Y$ are I1, SI2, SI1, VS2, VS1, VVS2, VVS1, and IF. Cut grades the quality of how a diamond was cut, while clarity grades how free it is from flaws, with IF being the best. Both are observed grades from the `diamonds` dataset rather than simulated values.
+
+```{r}
+counts_p3 <- table(Cut = diamonds$cut, Clarity = diamonds$clarity)
+joint_p3 <- prop.table(counts_p3)
+
+knitr::kable(round(joint_p3, 4), caption = "Joint PMF of Cut and Clarity")
+```
+
+## (b) Marginal Probability Distributions (2 points)
+
+> *Obtain the marginal probability distributions of $X$ and $Y$.*
+
+We sum the joint PMF across clarity to get the marginal of cut, and across cut to get the marginal of clarity.
+
+```{r}
+marginal_cut_p3 <- margin.table(joint_p3, 1)
+marginal_clarity_p3 <- margin.table(joint_p3, 2)
+
+knitr::kable(round(addmargins(joint_p3), 4),
+             caption = "Joint and Marginal PMFs of Cut and Clarity")
+```
+
+The most likely cut is `r names(which.max(marginal_cut_p3))` (`r round(max(marginal_cut_p3), 4)`), and the most likely clarity is `r names(which.max(marginal_clarity_p3))` (`r round(max(marginal_clarity_p3), 4)`).
+
+## (c) Conditional Distribution of $X$ Given $Y = y$ (2 points)
+
+> *Calculate the conditional probability distribution of $X$ given a particular value of $Y = y$.*
+
+We condition on $y = \text{IF}$, the best clarity grade, using $p_{X \mid Y}(x \mid y) = \frac{p_{X,Y}(x,y)}{p_Y(y)}$.
+
+```{r}
+cond_IF <- joint_p3[, "IF"] / marginal_clarity_p3["IF"]
+
+knitr::kable(
+  round(cbind(Marginal = marginal_cut_p3, Given_IF = cond_IF), 4),
+  caption = "Distribution of Cut: Overall and Given Clarity IF"
+)
+
+sum(cond_IF)
+```
+
+## (d) Interpretation (1 point)
+
+> *Interpret the conditional distribution and explain how the distribution of $X$ changes, or remains unchanged, when conditioned on $Y = y$.*
+
+Conditioning on IF changes the distribution of cut. The probability of an Ideal cut moves from `r round(marginal_cut_p3["Ideal"], 4)` overall to `r round(cond_IF["Ideal"], 4)`, while that of a Fair cut moves from `r round(marginal_cut_p3["Fair"], 4)` to `r round(cond_IF["Fair"], 4)`. Since the conditional distribution differs from the marginal, cut and clarity are dependent.
+
+\pagebreak
+
+# Conditional Distributions – Continuous Case (8 points)
+
+Using a real dataset with two continuous random variables or simulated continuous data:
+
+## (a) Two Continuous Random Variables (2 points)
+
+> *Generate or identify two continuous random variables $X$ and $Y$. Describe their distributions or the characteristics of the observed data.*
+
+Let $X$ be the price of a diamond in US dollars and $Y$ its weight in carats. Both are observed values that we treat as continuous.
+
+```{r}
+X_p4 <- diamonds$price
+Y_p4 <- diamonds$carat
+
+summary_p4 <- sapply(data.frame(Price = X_p4, Carat = Y_p4), summary)
+knitr::kable(round(summary_p4, 2), caption = "Summary Statistics of Price and Carat")
+```
+
+Price has a median of `r median(X_p4)` and a mean of `r round(mean(X_p4), 2)`, while carat has a median of `r median(Y_p4)` and a mean of `r round(mean(Y_p4), 2)`. Each mean exceeds its median, which suggests right skew.
+
+## (b) Marginal and Joint Distributions (2 points)
+
+> *Estimate or obtain their marginal distributions and examine their joint distribution using appropriate graphical representations.*
+
+We estimate each marginal with a histogram and density curve, then examine the joint distribution.
+
+```{r fig.width=6, fig.height=3.5}
+par(mfrow = c(1, 2))
+hist(X_p4, freq = FALSE, breaks = 50, main = "Marginal of Price", xlab = "Price (USD)")
+hist(Y_p4, freq = FALSE, breaks = 50, main = "Marginal of Carat", xlab = "Carat")
+```
+
+```{r fig.width=6, fig.height=3.5}
+smoothScatter(Y_p4, X_p4, xlab = "Carat", ylab = "Price (USD)",
+              main = "Joint Distribution of Carat and Price")
+```
+
+Both marginals are right-skewed. The joint plot shows that price tends to increase with carat, and its spread widens.
+
+## (c) Empirical Conditional Distribution (2 points)
+
+> *Obtain an empirical conditional distribution of $X$ given a selected value or interval of $Y$. Use an appropriate visualization, such as a conditional density plot, histogram, or density curve.*
+
+For a continuous variable, $P(Y = y) = 0$, so we condition on the interval $0.9 \le Y < 1.1$, or diamonds of about one carat.
+
+```{r fig.width=6, fig.height=4.5}
+cond_X_p4 <- X_p4[Y_p4 >= 0.9 & Y_p4 < 1.1]
+
+hist(cond_X_p4, freq = FALSE, breaks = 40, col = "lightblue", border = "white",
+     ylim = c(0, max(density(X_p4)$y)),
+     main = "Price Given 0.9 <= Carat < 1.1", xlab = "Price (USD)")
+lines(density(X_p4), col = "#ED4245")
+legend("topright", c("Conditional", "All Diamonds"),
+       fill = c("lightblue", "#ED4245"))
+
+compare_p4 <- data.frame(
+  Group = c("All diamonds", "Conditional"),
+  Mean = c(mean(X_p4), mean(cond_X_p4)),
+  Median = c(median(X_p4), median(cond_X_p4)),
+  SD = c(sd(X_p4), sd(cond_X_p4))
+)
+knitr::kable(compare_p4, digits = 2, caption = "Price Before and After Conditioning")
+```
+
+The condition keeps `r length(cond_X_p4)` diamonds. The bars show their prices, and the red curve shows the price distribution of all diamonds.
+
+## (d) Interpretation (2 points)
+
+> *Interpret the results and explain how conditioning on $Y$ affects the distribution of $X$. Relate your findings to the conditional density function:*
+> $$f_{X|Y}(x|y)=\frac{f_{X,Y}(x,y)}{f_Y(y)}$$
+
+Conditioning on diamonds from 0.9 to under 1.1 carats changes the distribution of price. Compared with the overall marginal, the center of the conditional distribution is higher, with the mean moving from `r round(mean(X_p4), 2)` to `r round(mean(cond_X_p4), 2)` and the median from `r median(X_p4)` to `r median(cond_X_p4)`. Its spread is narrower, with the standard deviation moving from `r round(sd(X_p4), 2)` to `r round(sd(cond_X_p4), 2)`, and the shape is less right-skewed.
+
+In $f_{X|Y}(x|y) = \frac{f_{X,Y}(x,y)}{f_Y(y)}$, restricting $Y$ to $[0.9, 1.1)$ isolates a slice of the joint density $f_{X,Y}(x,y)$ (the combined distribution of price and carat together). For an interval, we divide this slice by $P(0.9 \le Y < 1.1)$ to rescale the probabilities, which approximates the formula for a single value $y$. The center is higher because these diamonds are heavier than the median diamond, while holding carat weight nearly constant reduces price variation. This also shows that price and carat are dependent on one another.
+
+\pagebreak 
+
+# Conclusion
+
+This report examined how two random variables can be related through independence, sums, and conditional distributions. In Part 1, `cut` and `color` failed the factorization criterion, but the differences from independence were miniscule and Cramér's V was only about `r round(unname(V_p1), 3)`, so the two are pretty much independent in practice. In Part 2, the simulated sum of independent Poisson(3) and Poisson(5) variables closely matched a Poisson(8) distribution, with a mean and variance near 8. For Part 3, a diamond's clarity is dependent on its cut, with the cleanest stones leaning more toward Ideal cuts. In Part 4, carat weight and price are dependent on each other, since knowing that a diamond is about one carat gives a more focused picture of what it is likely to cost. In both cases, conditioning changed the distribution, indicating that the variables are dependent.
+
+# References
+
+R Core Team. (2026). *R: A language and environment for statistical computing* (Version 4.6.2) [Computer software]. R Foundation for Statistical Computing. https://www.R-project.org/
+
+Wickham, H. (2016). *ggplot2: Elegant graphics for data analysis*. Springer. https://ggplot2.tidyverse.org
+
+Wickham, H., Chang, W., Henry, L., Pedersen, T. L., Takahashi, K., Wilke, C., Woo, K., Yutani, H., Dunnington, D., & van den Brand, T. (2026). *Prices of over 50,000 round cut diamonds* (Version 4.0.4) [Data set]. Posit. https://ggplot2.tidyverse.org/reference/diamonds.html
